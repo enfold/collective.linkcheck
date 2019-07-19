@@ -28,7 +28,7 @@ class Export(BrowserView):
         tool = api.portal.get_tool('portal_linkcheck')
         entries = list(tool.checked.items())
         entries.sort(
-            key=lambda (i, entry): (
+            key=lambda i, entry: (
                 triage(None if i in tool.queue else entry[1]),
                 entry[0]),
             reverse=True,
@@ -102,4 +102,4 @@ class Export(BrowserView):
             self.request.response.setHeader(
                 'Content-Disposition',
                 'attachment; filename="%s"' % filename)
-            return file(tmpfile.name).read()
+            return open(tmpfile.name, 'rb').read()

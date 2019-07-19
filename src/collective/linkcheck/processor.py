@@ -2,12 +2,10 @@
 from App.config import getConfiguration
 from Products.CMFCore.utils import getToolByName
 from Products.CMFPlone.interfaces import IPloneSiteRoot
-from Queue import Queue
 from ZODB.POSException import ConflictError
-from cStringIO import StringIO
 from collective.linkcheck.interfaces import ISettings
 from collective.linkcheck.parse import iter_links
-from itertools import ifilterfalse, tee, ifilter
+from itertools import tee
 from plone.registry.interfaces import IRegistry
 from zExceptions import Unauthorized
 from zope.component import getUtility
@@ -16,6 +14,7 @@ import datetime
 import logging
 import os
 import requests
+import six
 import sys
 import threading
 import time
@@ -117,7 +116,7 @@ def publish_module(module_name,
             request.response._requestShutdown(code)
 
         try:
-            raise must_die[0], must_die[1], must_die[2]
+            six.reraise(*must_die)
         finally:
             must_die = None
 
@@ -132,7 +131,7 @@ def partition(pred, iterable):
     """
 
     t1, t2 = tee(iterable)
-    return ifilter(pred, t1), ifilterfalse(pred, t2)
+    return six.moves.ifilter(pred, t1), six.moves.ifilterfalse(pred, t2)
 
 
 def get_auth(url, auth_list):
@@ -146,13 +145,16 @@ def get_auth(url, auth_list):
 
 def run(app, args, rate=5):
     # Adjust root logging handler levels
-    level = getConfiguration().eventlog.getLowestHandlerLevel()
-    root = logging.getLogger()
-    for handler in root.handlers:
-        handler.setLevel(level)
+    try:
+        level = getConfiguration().eventlog.getLowestHandlerLevel()
+        root = logging.getLogger()
+        for handler in root.handlers:
+            handler.setLevel(level)
 
-    logger = logging.getLogger("linkcheck.processor")
-    logger.setLevel(level)
+        logger = logging.getLogger("linkcheck.processor")
+        logger.setLevel(level)
+    except AttributeError:
+        logger = logging.getLogger("linkcheck.processor")
     logger.info("looking for sites...")
 
     session = requests.Session()
@@ -216,7 +218,7 @@ def run(app, args, rate=5):
                         responses.append(r)
                         q.task_done()
 
-                q = Queue()
+                q = six.moves.queue.Queue()
                 for i in range(settings.concurrency):
                     t = threading.Thread(target=worker)
                     t.daemon = True
@@ -337,8 +339,8 @@ def run(app, args, rate=5):
                 if not settings.use_publisher:
                     continue
 
-                stdout = StringIO()
-                stderr = StringIO()
+                stdout = six.moves.cStringIO()
+                stderr = six.moves.cStringIO()
 
                 env = {
                     'GATEWAY_INTERFACE': 'CGI/1.1 ',

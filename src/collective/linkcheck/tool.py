@@ -6,6 +6,7 @@ from BTrees.IOBTree import IOBTree
 from BTrees.OIBTree import OIBTree
 from OFS.SimpleItem import SimpleItem
 from Products.CMFCore.utils import registerToolInterface
+from Products.CMFCore.utils import UniqueObject
 from collective.linkcheck.interfaces import ILinkCheckTool
 from collective.linkcheck.interfaces import ISettings
 from collective.linkcheck.queue import CompositeQueue
@@ -17,16 +18,19 @@ from zope.component import getUtility
 import datetime
 import logging
 import re
+import six
 import time
 
 logger = logging.getLogger("linkcheck.events")
 
 
-class LinkCheckTool(SimpleItem):
+class LinkCheckTool(UniqueObject, SimpleItem):
+
+    id = 'portal_linkcheck'
+
     security = ClassSecurityInfo()
 
-    def __init__(self, id=None):
-        super(LinkCheckTool, self).__init__(id)
+    def __init__(self):
 
         # This is the work queue; items in this queue are scheduled
         # for link validity check.
@@ -223,7 +227,7 @@ class LinkCheckTool(SimpleItem):
         return False
 
     def crawl_enqueue(self, obj):
-        if not isinstance(obj, basestring):
+        if not isinstance(obj, six.string_types):
             obj = obj.UID()
         self.crawl_queue.put(obj)
 

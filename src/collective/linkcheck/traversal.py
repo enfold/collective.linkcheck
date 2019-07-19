@@ -5,7 +5,7 @@ from collective.linkcheck.controlpanel import ControlPanelEditForm
 from collective.linkcheck.interfaces import ILayer
 from zExceptions import Unauthorized
 from zope.component import adapts
-from zope.interface import implements
+from zope.interface import implementer
 from zope.security import checkPermission
 from zope.traversing.interfaces import ITraversable
 
@@ -37,8 +37,8 @@ class Feed(Implicit):
         return view.RSS()
 
 
+@implementer(ITraversable)
 class FeedTraverser(object):
-    implements(ITraversable)
     adapts(ISiteRoot, ILayer)
 
     def __init__(self, context, request=None):

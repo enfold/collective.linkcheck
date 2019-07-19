@@ -54,10 +54,10 @@
       handler=".events.before_traverse"
       />
 
-  <subscriber
+  <!-- subscriber
       for="zope.publisher.interfaces.IEndRequestEvent"
       handler=".events.end_request"
-      />
+      / -->
 
   <subscriber
       for="Products.CMFCore.interfaces.IContentish

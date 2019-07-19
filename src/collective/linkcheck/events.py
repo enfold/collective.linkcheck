@@ -2,7 +2,6 @@
 from Products.CMFCore.utils import getToolByName
 from Products.CMFPlone.interfaces import IPloneSiteRoot
 from ZODB.POSException import ConflictError
-from cStringIO import StringIO
 from collective.linkcheck.interfaces import ILayer
 from collective.linkcheck.interfaces import ISettings
 from collective.linkcheck.parse import iter_links
@@ -14,6 +13,7 @@ from zope.component import getUtility
 import datetime
 import gzip
 import logging
+import six
 import time
 import transaction
 
@@ -97,7 +97,7 @@ def end_request(event):
 
     if response.headers.get('content-encoding') == 'gzip':
         try:
-            body = gzip.GzipFile(fileobj=StringIO(body)).read()
+            body = gzip.GzipFile(fileobj=six.moves.cStringIO(body)).read()
         except BaseException as exc:
             logger.warn(exc)
             return

@@ -11,6 +11,7 @@ from plone.keyring.interfaces import IKeyManager
 from plone.memoize.instance import memoize
 from plone.registry.interfaces import IRegistry
 from plone.z3cform import layout
+from six.moves import urllib
 from z3c.form import button
 from z3c.form import field
 from z3c.form import group
@@ -22,9 +23,9 @@ from zope.schema import Field
 import datetime
 import hashlib
 import logging
+import six
 import time
 import transaction
-import urllib
 
 
 logger = logging.getLogger("linkcheck.controlpanel")
@@ -158,9 +159,13 @@ class ControlPanelEditForm(controlpanel.RegistryEditForm):
     def get_auth_token(self):
         manager = getUtility(IKeyManager)
         secret = manager.secret()
-        sha = hashlib.sha1(self.context.absolute_url())
+        url = self.context.absolute_url()
+        if six.PY3:
+            url = url.encode()
+            secret = secret.encode()
+        sha = hashlib.sha1(url)
         sha.update(secret)
-        sha.update("RSS")
+        sha.update(six.b("RSS"))
         return sha.hexdigest()
 
     def get_modified_date(self):
@@ -178,7 +183,7 @@ class ControlPanelEditForm(controlpanel.RegistryEditForm):
 
         entries = list(self.tool.checked.items())
         entries.sort(
-            key=lambda (i, entry): (
+            key=lambda i, entry: (
                 triage(None if i in self.tool.queue else entry[1]),
                 entry[0]),
             reverse=True,
